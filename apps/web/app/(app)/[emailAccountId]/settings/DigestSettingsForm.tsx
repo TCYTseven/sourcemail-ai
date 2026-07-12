@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useAction } from "next-safe-action/hooks";
@@ -9,14 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TimePicker } from "@/components/TimePicker";
 import { Toggle } from "@/components/Toggle";
-import { MutedText } from "@/components/Typography";
 import { toastError, toastSuccess } from "@/components/Toast";
 import { getActionErrorMessage } from "@/utils/error";
 import { LoadingContent } from "@/components/LoadingContent";
 import { useRules } from "@/hooks/useRules";
 import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { prefixPath } from "@/utils/path";
 import { updateDigestEmailDeliveryAction } from "@/utils/actions/messaging-channels";
 import {
   updateDigestItemsAction,
@@ -64,13 +61,7 @@ const daysOfWeek = [
   { value: "6", label: "Saturday" },
 ];
 
-export function DigestSettingsForm({
-  onSuccess,
-  showChannelsHint = true,
-}: {
-  onSuccess?: () => void;
-  showChannelsHint?: boolean;
-}) {
+export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
   const { emailAccountId } = useAccount();
   const {
     data: rules,
@@ -329,10 +320,7 @@ export function DigestSettingsForm({
           </form>
         </LoadingContent>
 
-        <DigestDeliveryChannels
-          emailAccountId={emailAccountId}
-          showChannelsHint={showChannelsHint}
-        />
+        <DigestDeliveryChannels emailAccountId={emailAccountId} />
       </div>
 
       <EmailPreview selectedDigestItems={selectedDigestItems} />
@@ -342,10 +330,8 @@ export function DigestSettingsForm({
 
 function DigestDeliveryChannels({
   emailAccountId,
-  showChannelsHint,
 }: {
   emailAccountId: string;
-  showChannelsHint: boolean;
 }) {
   const { data: account, isLoading, mutate } = useEmailAccountFull();
 
@@ -375,18 +361,6 @@ function DigestDeliveryChannels({
           onChange={(sendEmail) => execute({ sendEmail })}
         />
       </div>
-      {showChannelsHint && (
-        <MutedText>
-          Want digests in your chat app?{" "}
-          <Link
-            href={prefixPath(emailAccountId, "/channels")}
-            className="text-foreground underline"
-          >
-            Configure on the Channels page
-          </Link>
-          .
-        </MutedText>
-      )}
     </div>
   );
 }

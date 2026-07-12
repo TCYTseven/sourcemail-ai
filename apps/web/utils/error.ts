@@ -172,6 +172,24 @@ export function isGmailInsufficientPermissionsError(error: unknown): boolean {
   return (error as any)?.errors?.[0]?.reason === "insufficientPermissions";
 }
 
+// The provider's API isn't enabled/configured for the app's cloud project
+// (e.g. Gmail API disabled in Google Cloud). This is an app-config problem,
+// not a user token problem, so it can't be fixed by reconnecting the account.
+export function isMailApiNotEnabledError(error: unknown): boolean {
+  // biome-ignore lint/suspicious/noExplicitAny: existing loose external shape
+  if ((error as any)?.errors?.[0]?.reason === "accessNotConfigured")
+    return true;
+
+  const message = getErrorMessage(error);
+  if (!message) return false;
+
+  return (
+    message.includes("accessNotConfigured") ||
+    message.includes("has not been used in project") ||
+    message.includes("API has not been used")
+  );
+}
+
 export function isGmailRateLimitExceededError(error: unknown): boolean {
   // biome-ignore lint/suspicious/noExplicitAny: existing loose external shape
   return (error as any)?.errors?.[0]?.reason === "rateLimitExceeded";

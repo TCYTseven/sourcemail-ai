@@ -211,7 +211,7 @@ export function StepBulkUnsubscribe({ onNext }: { onNext: () => void }) {
   const hasMore = suggestions.length > previewSenders.length;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-10">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-xl">
         <div className="mb-6 text-center">
           <PageHeading className="mb-3">
@@ -226,9 +226,9 @@ export function StepBulkUnsubscribe({ onNext }: { onNext: () => void }) {
 
         <section
           aria-label="Senders you rarely read"
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
         >
-          <ul className="divide-y divide-slate-100 py-1.5">
+          <ul className="divide-y divide-border py-1.5">
             {previewSenders.map((item) => (
               <SuggestionRow
                 key={item.name}
@@ -243,8 +243,8 @@ export function StepBulkUnsubscribe({ onNext }: { onNext: () => void }) {
         <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-sm text-muted-foreground">
           <SparklesIcon className="size-3.5 text-amber-500" />
           {hasMore
-            ? `Showing your top ${previewSenders.length}. We'll keep spotting more as you use Inbox Zero.`
-            : "We'll keep spotting more as you use Inbox Zero."}
+            ? `Showing your top ${previewSenders.length}. We'll keep spotting more as you use LassoMail.`
+            : "We'll keep spotting more as you use LassoMail."}
         </p>
 
         <div className="mt-7 flex flex-col items-center gap-3">
@@ -286,7 +286,7 @@ export function StepBulkUnsubscribe({ onNext }: { onNext: () => void }) {
 
 function StaticBulkUnsubscribeStep({ onNext }: { onNext: () => void }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="flex flex-col items-center text-center max-w-md">
         <div className="mb-6 h-[240px] flex items-end justify-center">
           <BulkUnsubscribeIllustration />

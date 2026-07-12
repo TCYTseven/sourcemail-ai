@@ -18,18 +18,13 @@ export function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "bg-white mx-auto flex items-center justify-between h-16",
+        "mx-auto flex h-16 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-md",
         className,
       )}
     >
-      <div className="hidden md:block">
-        <Logo />
-      </div>
-      <div className="block md:hidden">
-        <Logo variant="mobile" />
-      </div>
+      <Logo />
       <HeaderLinks />
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Button variant="secondary" asChild>
           <Link
             href="/login"
@@ -43,7 +38,7 @@ export function Header({ className }: HeaderProps) {
             href="/login"
             onClick={() => landingPageAnalytics.getStartedClicked(posthog)}
           >
-            <span className="relative z-10">Get started free</span>
+            <span className="relative z-10">Get started</span>
           </Link>
         </Button>
       </div>

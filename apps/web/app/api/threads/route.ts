@@ -4,6 +4,7 @@ import { type ThreadsQuery, threadsQuery } from "@/utils/threads/validation";
 import { isDefined } from "@/utils/types";
 import prisma from "@/utils/prisma";
 import { isIgnoredSender } from "@/utils/filter-ignored-senders";
+import { isMailApiNotEnabledError } from "@/utils/error";
 import type { EmailProvider } from "@/utils/email/types";
 
 export const maxDuration = 30;
@@ -49,6 +50,19 @@ export const GET = withEmailProvider(
         error,
         emailAccountId,
       });
+
+      if (isMailApiNotEnabledError(error)) {
+        const message =
+          emailProvider.name === "google"
+            ? "Gmail API access isn't enabled for this app. Enable the Gmail API in Google Cloud for the project tied to your OAuth credentials, wait a minute, then reload."
+            : "Your email provider's API access isn't enabled for this app. Enable it in the provider's admin console, then reload.";
+
+        return NextResponse.json(
+          { error: message, message, isKnownError: true },
+          { status: 403 },
+        );
+      }
+
       return NextResponse.json(
         { error: "Failed to fetch threads" },
         { status: 500 },

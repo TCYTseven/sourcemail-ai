@@ -1,5 +1,4 @@
 import { startTransition, useMemo, useState, useRef, useEffect } from "react";
-import { useTheme } from "next-themes";
 import DOMPurify from "dompurify";
 import { env } from "@/env";
 import { decodeHtmlEntities } from "@/utils/gmail/decode";
@@ -22,8 +21,7 @@ export function HtmlEmail({ html }: { html: string }) {
   const [showReplies, setShowReplies] = useState(false);
   const [renderHtml, setRenderHtml] = useState(() => sanitizedHtml);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const { theme } = useTheme();
-  const isDarkMode = theme === "dark";
+  const isDarkMode = true;
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +66,7 @@ export function HtmlEmail({ html }: { html: string }) {
         IMAGE_PROXY_BASE_URL,
         IMAGE_PROXY_ORIGIN,
       ),
-    [renderHtml, mainContent, showReplies, isDarkMode],
+    [renderHtml, mainContent, showReplies],
   );
 
   const iframeHeight = useIframeHeight(iframeRef);

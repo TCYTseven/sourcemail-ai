@@ -741,7 +741,7 @@ export class GmailProvider implements EmailProvider {
         headerMessageId,
         references: parentReferences,
       }),
-      headers: { "X-Mailer": "Inbox Zero Web" },
+      headers: { "X-Mailer": "LassoMail Web" },
     });
 
     const result = await withGmailRetry(() =>
@@ -788,7 +788,7 @@ export class GmailProvider implements EmailProvider {
       html: content,
       inReplyTo: currentDraft.headers?.["in-reply-to"],
       references: currentDraft.headers?.references,
-      headers: { "X-Mailer": "Inbox Zero Web" },
+      headers: { "X-Mailer": "LassoMail Web" },
     });
 
     await withGmailRetry(() =>

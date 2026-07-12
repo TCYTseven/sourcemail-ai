@@ -10,9 +10,6 @@ import {
   CheckIcon,
   BotIcon,
   type LucideIcon,
-  CalendarIcon,
-  GlobeIcon,
-  UsersIcon,
   MessageSquareIcon,
   InboxIcon,
   Loader2Icon,
@@ -26,24 +23,16 @@ import { Card } from "@/components/ui/card";
 import { prefixPath } from "@/utils/path";
 import { useSetupProgress } from "@/hooks/useSetupProgress";
 import { LoadingContent } from "@/components/LoadingContent";
-import { EXTENSION_URL } from "@/utils/config";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   STEP_KEYS,
   getOnboardingStepHref,
 } from "@/app/(app)/[emailAccountId]/onboarding/onboardingFlow";
-import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { BRAND_NAME } from "@/utils/branding";
 import { dismissHintAction } from "@/utils/actions/hints";
 import { toastError } from "@/components/Toast";
 
-type DismissibleSetupStep =
-  | "aiAssistant"
-  | "bulkUnsubscribe"
-  | "calendarConnected"
-  | "teamInvite"
-  | "tabsExtension";
+type DismissibleSetupStep = "aiAssistant" | "bulkUnsubscribe";
 
 function FeatureCard({
   emailAccountId,
@@ -88,39 +77,34 @@ function getFeatures() {
     {
       href: "/assistant",
       icon: MessageSquareIcon,
-      title: "Chat",
-      description: "Chat with your inbox to find information and take actions",
+      title: "AI inbox chat",
+      description: "Ask your inbox questions and take action from one place",
     },
     {
       href: "/automation",
       icon: BotIcon,
-      title: "Assistant",
+      title: "Auto drafts",
       description:
-        "Your personal email assistant that organizes, archives, and drafts replies",
+        "Tune the assistant rules that organize email and draft replies",
     },
     {
       href: "/bulk-unsubscribe",
       icon: ArchiveIcon,
-      title: "Bulk Unsubscribe",
-      description: "Easily unsubscribe from unwanted newsletters in one click",
+      title: "Newsletter cleanup",
+      description: "Unsubscribe from unwanted senders without leaving the app",
     },
     {
       href: "/bulk-archive",
       icon: InboxIcon,
-      title: "Bulk Archive",
-      description: "Quickly clean up your inbox by archiving old emails",
+      title: "Inbox cleanup",
+      description: "Archive old senders and keep Gmail focused",
     },
   ] as const;
 
   return features;
 }
 
-function FeatureGrid({
-  emailAccountId,
-}: {
-  emailAccountId: string;
-  provider: string;
-}) {
+function FeatureGrid({ emailAccountId }: { emailAccountId: string }) {
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
       {getFeatures().map((feature) => (
@@ -255,35 +239,21 @@ const StepItem = ({
 
 function Checklist({
   emailAccountId,
-  provider,
   completedCount,
   totalSteps,
   isBulkUnsubscribeConfigured,
   isAiAssistantConfigured,
-  isCalendarConnected,
-  showCalendarStep,
-  isTabsExtensionCompleted,
-  teamInvite,
   onSetupProgressChanged,
 }: {
   emailAccountId: string;
-  provider: string;
   completedCount: number;
   totalSteps: number;
   isBulkUnsubscribeConfigured: boolean;
   isAiAssistantConfigured: boolean;
-  isCalendarConnected: boolean;
-  showCalendarStep: boolean;
-  isTabsExtensionCompleted: boolean;
-  teamInvite: {
-    completed: boolean;
-    organizationId: string | undefined;
-  } | null;
   onSetupProgressChanged: (stepKey: DismissibleSetupStep) => void;
 }) {
   const { executeAsync: dismissSetupStep, isExecuting: isDismissingStep } =
     useAction(dismissHintAction);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [pendingStep, setPendingStep] = useState<DismissibleSetupStep | null>(
     null,
   );
@@ -320,10 +290,6 @@ function Checklist({
     ],
   );
 
-  const handleOpenInviteModal = () => {
-    setIsInviteModalOpen(true);
-  };
-
   return (
     <Card className="mb-6 overflow-hidden">
       <div className="border-b border-border p-4">
@@ -346,8 +312,8 @@ function Checklist({
       <StepItem
         href={getOnboardingStepHref(emailAccountId, STEP_KEYS.LABELS)}
         icon={<BotIcon size={18} />}
-        title="Set up your Personal Assistant"
-        timeEstimate="5 minutes"
+        title="Create your master prompt and AI rules"
+        timeEstimate="3 minutes"
         completed={isAiAssistantConfigured}
         actionText="Set up"
         onMarkDone={() => handleMarkStepDone("aiAssistant")}
@@ -359,7 +325,7 @@ function Checklist({
       <StepItem
         href={prefixPath(emailAccountId, "/bulk-unsubscribe")}
         icon={<ArchiveIcon size={18} />}
-        title="Unsubscribe from a newsletter you don't read"
+        title="Clean up newsletters you do not read"
         timeEstimate="2 minutes"
         completed={isBulkUnsubscribeConfigured}
         actionText="View"
@@ -368,69 +334,12 @@ function Checklist({
         markDoneDisabled={isDismissingStep}
         markDonePending={pendingStep === "bulkUnsubscribe"}
       />
-
-      {showCalendarStep && (
-        <StepItem
-          href={prefixPath(emailAccountId, "/calendars")}
-          icon={<CalendarIcon size={18} />}
-          title="Connect your calendar"
-          timeEstimate="2 minutes"
-          completed={isCalendarConnected}
-          actionText="Connect"
-          onMarkDone={() => handleMarkStepDone("calendarConnected")}
-          showMarkDone
-          markDoneDisabled={isDismissingStep}
-          markDonePending={pendingStep === "calendarConnected"}
-        />
-      )}
-
-      {teamInvite && (
-        <StepItem
-          href={prefixPath(emailAccountId, "/organization")}
-          icon={<UsersIcon size={18} />}
-          title="Invite team members"
-          timeEstimate="2 minutes"
-          completed={teamInvite.completed}
-          actionText="Invite"
-          onMarkDone={() => handleMarkStepDone("teamInvite")}
-          markDoneDisabled={isDismissingStep}
-          markDonePending={pendingStep === "teamInvite"}
-          showMarkDone
-          markDoneText="Skip"
-          onActionClick={handleOpenInviteModal}
-        />
-      )}
-
-      {teamInvite && (
-        <InviteMemberModal
-          organizationId={teamInvite.organizationId}
-          open={isInviteModalOpen}
-          onOpenChange={setIsInviteModalOpen}
-          trigger={null}
-        />
-      )}
-
-      {isGoogleProvider(provider) && (
-        <StepItem
-          href={EXTENSION_URL}
-          linkProps={{ target: "_blank", rel: "noopener noreferrer" }}
-          icon={<GlobeIcon size={18} />}
-          title={`Optional: Install the ${BRAND_NAME} Tabs extension`}
-          timeEstimate="1 minute"
-          completed={isTabsExtensionCompleted}
-          actionText="Install"
-          onMarkDone={() => handleMarkStepDone("tabsExtension")}
-          markDoneDisabled={isDismissingStep}
-          markDonePending={pendingStep === "tabsExtension"}
-          showMarkDone={true}
-        />
-      )}
     </Card>
   );
 }
 
 export function SetupContent() {
-  const { emailAccountId, provider } = useAccount();
+  const { emailAccountId } = useAccount();
   const { data, isLoading, error, mutate } = useSetupProgress();
   const searchParams = useSearchParams();
   const forceSetupMode = searchParams.get("forceSetup") === "1";
@@ -452,17 +361,12 @@ export function SetupContent() {
       {data && (
         <SetupPageContent
           emailAccountId={emailAccountId}
-          provider={provider}
           isAiAssistantConfigured={data.steps.aiAssistant}
           isBulkUnsubscribeConfigured={data.steps.bulkUnsubscribe}
-          isCalendarConnected={data.steps.calendarConnected}
-          showCalendarStep={data.showCalendarStep}
-          isTabsExtensionCompleted={data.tabsExtensionCompleted}
           completedCount={data.completed}
           totalSteps={data.total}
           isSetupComplete={data.isComplete}
           forceSetupMode={forceSetupMode}
-          teamInvite={data.teamInvite}
           onSetupProgressChanged={handleSetupProgressChanged}
         />
       )}
@@ -472,34 +376,21 @@ export function SetupContent() {
 
 function SetupPageContent({
   emailAccountId,
-  provider,
   isBulkUnsubscribeConfigured,
   isAiAssistantConfigured,
-  isCalendarConnected,
-  showCalendarStep,
-  isTabsExtensionCompleted,
   completedCount,
   totalSteps,
   isSetupComplete,
   forceSetupMode,
-  teamInvite,
   onSetupProgressChanged,
 }: {
   emailAccountId: string;
-  provider: string;
   isBulkUnsubscribeConfigured: boolean;
   isAiAssistantConfigured: boolean;
-  isCalendarConnected: boolean;
-  showCalendarStep: boolean;
-  isTabsExtensionCompleted: boolean;
   completedCount: number;
   totalSteps: number;
   isSetupComplete: boolean;
   forceSetupMode: boolean;
-  teamInvite: {
-    completed: boolean;
-    organizationId: string | undefined;
-  } | null;
   onSetupProgressChanged: (stepKey: DismissibleSetupStep) => void;
 }) {
   const shouldShowSetupChecklist = forceSetupMode || !isSetupComplete;
@@ -520,19 +411,14 @@ function SetupPageContent({
       {shouldShowSetupChecklist ? (
         <Checklist
           emailAccountId={emailAccountId}
-          provider={provider}
           isBulkUnsubscribeConfigured={isBulkUnsubscribeConfigured}
           isAiAssistantConfigured={isAiAssistantConfigured}
-          isCalendarConnected={isCalendarConnected}
-          showCalendarStep={showCalendarStep}
-          isTabsExtensionCompleted={isTabsExtensionCompleted}
           completedCount={completedCount}
           totalSteps={totalSteps}
-          teamInvite={teamInvite}
           onSetupProgressChanged={onSetupProgressChanged}
         />
       ) : (
-        <FeatureGrid emailAccountId={emailAccountId} provider={provider} />
+        <FeatureGrid emailAccountId={emailAccountId} />
       )}
     </div>
   );
@@ -542,43 +428,14 @@ function getUpdatedSetupProgress(
   currentData: NonNullable<ReturnType<typeof useSetupProgress>["data"]>,
   stepKey: DismissibleSetupStep,
 ) {
-  if (stepKey === "tabsExtension") {
-    return currentData.tabsExtensionCompleted
-      ? currentData
-      : { ...currentData, tabsExtensionCompleted: true };
-  }
-
   const nextSteps = { ...currentData.steps };
-  let completedIncrement = 0;
-
-  if (stepKey === "teamInvite") {
-    if (!currentData.teamInvite || currentData.teamInvite.completed) {
-      return currentData;
-    }
-
-    completedIncrement = 1;
-
-    return {
-      ...currentData,
-      completed: Math.min(
-        currentData.completed + completedIncrement,
-        currentData.total,
-      ),
-      isComplete:
-        currentData.completed + completedIncrement >= currentData.total,
-      teamInvite: {
-        ...currentData.teamInvite,
-        completed: true,
-      },
-    };
-  }
 
   if (nextSteps[stepKey]) {
     return currentData;
   }
 
   nextSteps[stepKey] = true;
-  completedIncrement = 1;
+  const completedIncrement = 1;
 
   return {
     ...currentData,

@@ -1,9 +1,5 @@
-import { redirectToEmailAccountPath } from "@/utils/account";
+import { redirect } from "next/navigation";
 
-export default async function CalendarsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  await redirectToEmailAccountPath("/calendars", await searchParams);
+export default async function CalendarsPage() {
+  redirect("/automation");
 }

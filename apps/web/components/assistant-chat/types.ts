@@ -28,7 +28,6 @@ import type {
   SaveMemoryTool,
   SearchMemoriesTool,
 } from "@/utils/ai/assistant/chat-memory-tools";
-import type { GetCalendarEventsTool } from "@/utils/ai/assistant/chat-calendar-tools";
 
 // export type DataPart = { type: "append-message"; message: string };
 
@@ -61,7 +60,6 @@ export type ChatTools = {
   sendEmail: SendEmailTool;
   replyEmail: ReplyEmailTool;
   forwardEmail: ForwardEmailTool;
-  getCalendarEvents: GetCalendarEventsTool;
   readAttachment: ReadAttachmentTool;
 };
 

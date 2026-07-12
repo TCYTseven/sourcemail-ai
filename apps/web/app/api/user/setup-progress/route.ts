@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import { SafeError } from "@/utils/error";
 import { withEmailAccount } from "@/utils/middleware";
-import { env } from "@/env";
 
 export type GetSetupProgressResponse = Awaited<
   ReturnType<typeof getSetupProgress>
@@ -38,25 +37,7 @@ async function getSetupProgress({
         where: { status: { not: null } },
         take: 1,
       },
-      calendarConnections: { select: { id: true }, take: 1 },
       user: { select: { dismissedHints: true } },
-      members: {
-        take: 1,
-        select: {
-          role: true,
-          organizationId: true,
-          organization: {
-            select: {
-              _count: {
-                select: {
-                  members: true,
-                  invitations: true,
-                },
-              },
-            },
-          },
-        },
-      },
     },
   });
 
@@ -64,72 +45,27 @@ async function getSetupProgress({
     throw new SafeError("Email account not found");
   }
 
-  const membership = emailAccount.members[0];
-  const isOwner = membership?.role === "owner";
-  const hasNoOrg = !membership;
-  const hasTeamMembers = (membership?.organization?._count.members ?? 0) > 1;
-  const hasPendingInvitations =
-    (membership?.organization?._count.invitations ?? 0) > 0;
-  const teamInviteDismissed = emailAccount.user.dismissedHints.includes(
-    `setup:teamInvite:${emailAccountId}`,
-  );
   const aiAssistantDismissed = emailAccount.user.dismissedHints.includes(
     `setup:aiAssistant:${emailAccountId}`,
   );
   const bulkUnsubscribeDismissed = emailAccount.user.dismissedHints.includes(
     `setup:bulkUnsubscribe:${emailAccountId}`,
   );
-  const calendarConnectedDismissed = emailAccount.user.dismissedHints.includes(
-    `setup:calendarConnected:${emailAccountId}`,
-  );
-  const tabsExtensionCompleted = emailAccount.user.dismissedHints.includes(
-    `setup:tabsExtension:${emailAccountId}`,
-  );
-  const showCalendarStep = Boolean(
-    env.NEXT_PUBLIC_MEETING_BRIEFS_ENABLED ||
-      env.NEXT_PUBLIC_BOOKING_LINKS_ENABLED,
-  );
-
-  const teamInviteCompleted =
-    hasTeamMembers || hasPendingInvitations || teamInviteDismissed;
-
-  const showTeamInviteStep = hasNoOrg || isOwner;
 
   const steps = {
     aiAssistant: emailAccount.rules.length > 0 || aiAssistantDismissed,
     bulkUnsubscribe:
       emailAccount.newsletters.length > 0 || bulkUnsubscribeDismissed,
-    calendarConnected: showCalendarStep
-      ? emailAccount.calendarConnections.length > 0 ||
-        calendarConnectedDismissed
-      : true,
   };
 
-  const visibleSetupSteps = [
-    steps.aiAssistant,
-    steps.bulkUnsubscribe,
-    ...(showCalendarStep ? [steps.calendarConnected] : []),
-  ];
-  const baseCompleted = visibleSetupSteps.filter(Boolean).length;
-  const baseTotal = visibleSetupSteps.length;
-
-  const completed = showTeamInviteStep
-    ? baseCompleted + (teamInviteCompleted ? 1 : 0)
-    : baseCompleted;
-  const total = showTeamInviteStep ? baseTotal + 1 : baseTotal;
+  const visibleSetupSteps = [steps.aiAssistant, steps.bulkUnsubscribe];
+  const completed = visibleSetupSteps.filter(Boolean).length;
+  const total = visibleSetupSteps.length;
 
   return {
     steps,
     completed,
     total,
     isComplete: completed === total,
-    showCalendarStep,
-    tabsExtensionCompleted,
-    teamInvite: showTeamInviteStep
-      ? {
-          completed: teamInviteCompleted,
-          organizationId: membership?.organizationId,
-        }
-      : null,
   };
 }

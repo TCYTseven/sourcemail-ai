@@ -36,7 +36,6 @@ import {
 import { Toggle } from "@/components/Toggle";
 import { Tooltip } from "@/components/Tooltip";
 import { useLabels } from "@/hooks/useLabels";
-import { useMessagingChannels } from "@/hooks/useMessagingChannels";
 import { AlertError } from "@/components/Alert";
 import { LearnedPatternsDialog } from "@/app/(app)/[emailAccountId]/assistant/group/LearnedPatterns";
 import { useAccount } from "@/providers/EmailAccountProvider";
@@ -204,7 +203,6 @@ export function RuleForm({
   } = useFieldArray({ control, name: "actions" });
 
   const { userLabels, isLoading, mutate: mutateLabels } = useLabels();
-  const { data: messagingChannelsData } = useMessagingChannels(emailAccountId);
   const { folders, isLoading: foldersLoading } = useFolders(provider);
   const router = useRouter();
 
@@ -544,10 +542,7 @@ export function RuleForm({
             typeOptions={typeOptions}
             folders={folders}
             foldersLoading={foldersLoading}
-            messagingChannels={messagingChannelsData?.channels ?? []}
-            availableMessagingProviders={
-              messagingChannelsData?.availableProviders ?? []
-            }
+            messagingChannels={[]}
             attachmentSources={attachmentSources}
             onAttachmentSourcesChange={setAttachmentSources}
           />
@@ -612,10 +607,8 @@ export function RuleForm({
                 )}
 
                 <NotifyChannelRow
-                  channels={messagingChannelsData?.channels ?? []}
-                  availableProviders={
-                    messagingChannelsData?.availableProviders ?? []
-                  }
+                  channels={[]}
+                  availableProviders={[]}
                   emailAccountId={emailAccountId}
                   value={watch("notifyMessagingChannelId") ?? null}
                   onChange={(channelId) => {

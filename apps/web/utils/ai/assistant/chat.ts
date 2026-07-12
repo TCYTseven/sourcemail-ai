@@ -36,7 +36,6 @@ import {
   startSenderCategorizationTool,
 } from "./chat-inbox-tools";
 import { saveMemoryTool, searchMemoriesTool } from "./chat-memory-tools";
-import { getCalendarEventsTool } from "./chat-calendar-tools";
 import type { MessagingPlatform } from "@/utils/messaging/platforms";
 import type { SerializedMatchReason } from "@/utils/ai/choose-rule/types";
 import {
@@ -268,8 +267,6 @@ export async function aiProcessAssistantChat({
       : {}),
 
     // Progressive disclosure groups (registered but not active by default)
-    // Calendar
-    getCalendarEvents: getCalendarEventsTool(toolOptions),
     // Attachments
     readAttachment: readAttachmentTool(toolOptions),
     ...providerPolicy.getTaxonomyTools(toolOptions),
@@ -670,12 +667,12 @@ export function buildResolvedSystemPrompt({
 }) {
   const providerPolicy = getAssistantChatProvider(provider);
   const sections = [
-    "You are the Inbox Zero assistant. You help users understand their inbox, take inbox actions, update account features, and manage automation rules.",
+    "You are the LassoMail assistant. You help users understand their inbox, draft replies, take inbox actions, and manage email automation rules.",
     `Core responsibilities:
 1. Search and summarize inbox activity, especially what is new and what needs attention
 2. Take inbox actions such as archive, trash/delete, mark read, bulk archive by sender, and sender unsubscribe
-3. Update account features such as meeting briefs and auto-file attachments
-4. Create and update rules`,
+3. Create and update rules that categorize, archive, and draft replies
+4. Maintain the user's master prompt, writing instructions, and draft knowledge base`,
     `Tool usage strategy:
 - Use the minimum number of tools needed. Start with read-only context tools before write tools when current inbox, account, or rule state is needed.
 - When a request can be completed with available tools, call the tool instead of only describing what you would do.
@@ -725,7 +722,8 @@ export function buildResolvedSystemPrompt({
 - If a rule write reports stale rule state, refresh with getUserRulesAndSettings and retry from that latest state.`,
     `Provider context:
 - Current provider: ${provider}.
-- User timezone: ${userTimezone}. Current timestamp: ${currentTimestamp}. Resolve relative dates like today, tomorrow, this afternoon, Monday, or Friday from this timezone before calling calendar or inbox date-range tools.`,
+- User timezone: ${userTimezone}. Current timestamp: ${currentTimestamp}. Resolve relative dates like today, tomorrow, this afternoon, Monday, or Friday from this timezone before calling inbox date-range tools.
+- Calendar, scheduling, meeting-brief, teammate, organization, and connected-app setup are outside this product surface. Do not offer to create or manage them; keep the user focused on inbox search, inbox actions, auto drafts, rules, master prompt instructions, and draft knowledge.`,
     providerPolicy.searchSyntaxPolicy,
     `Search strategy:
 - If the user names a sender or brand but the actual email address is not known yet, search first, inspect the returned \`from\` values, and then refine with \`from:\` before writing when needed.

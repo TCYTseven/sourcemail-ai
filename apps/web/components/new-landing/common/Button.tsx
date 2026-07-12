@@ -40,9 +40,9 @@ export function Button({
             "before:absolute before:inset-0 before:bg-gradient-to-b before:from-[#285EE5] before:to-[#5380F2] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-200 before:z-0",
           ],
           secondary:
-            "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 text-gray-800",
+            "bg-secondary hover:bg-secondary/80 border border-border text-secondary-foreground",
           "secondary-two":
-            "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 text-gray-500 shadow-[0px_2px_16px_0px_#00000008] hover:shadow-[0px_2px_16px_0px_#00000015] [&>svg]:text-[#AEAAA8]",
+            "bg-secondary hover:bg-secondary/80 border border-border text-muted-foreground shadow-none",
         },
         size: {
           md: "text-sm py-2 px-4",

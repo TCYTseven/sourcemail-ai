@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { ChevronDownIcon, ChevronRightIcon, PaperclipIcon } from "lucide-react";
@@ -51,13 +50,9 @@ import { MutedText } from "@/components/Typography";
 import { BRAND_NAME } from "@/utils/branding";
 import { ActionAttachmentsField } from "@/app/(app)/[emailAccountId]/assistant/ActionAttachmentsField";
 import type { AttachmentSourceInput } from "@/utils/attachments/source-schema";
-import {
-  getConnectAppLabel,
-  getMessagingProviderName,
-} from "@/utils/messaging/platforms";
+import { getMessagingProviderName } from "@/utils/messaging/platforms";
 import { getConnectedRuleNotificationChannels } from "@/utils/messaging/routes";
 import type { GetMessagingChannelsResponse } from "@/app/api/user/messaging-channels/route";
-import { prefixPath } from "@/utils/path";
 import { isDraftReplyActionType } from "@/utils/actions/draft-reply";
 import {
   buildDraftEmailAction,
@@ -68,9 +63,6 @@ import {
 } from "@/app/(app)/[emailAccountId]/assistant/draftReplyActions";
 
 type MessagingChannelOption = GetMessagingChannelsResponse["channels"][number];
-type MessagingProviderOption =
-  GetMessagingChannelsResponse["availableProviders"][number];
-
 export function ActionSteps({
   actionFields,
   register,
@@ -88,7 +80,6 @@ export function ActionSteps({
   folders,
   foldersLoading,
   messagingChannels,
-  availableMessagingProviders,
   append,
   attachmentSources,
   onAttachmentSourcesChange,
@@ -109,7 +100,6 @@ export function ActionSteps({
   folders: OutlookFolder[];
   foldersLoading: boolean;
   messagingChannels: MessagingChannelOption[];
-  availableMessagingProviders: MessagingProviderOption[];
   append: (action: CreateRuleBody["actions"][number]) => void;
   attachmentSources: AttachmentSourceInput[];
   onAttachmentSourcesChange: (value: AttachmentSourceInput[]) => void;
@@ -146,7 +136,6 @@ export function ActionSteps({
           folders={folders}
           foldersLoading={foldersLoading}
           messagingChannels={messagingChannels}
-          availableMessagingProviders={availableMessagingProviders}
           attachmentSources={attachmentSources}
           onAttachmentSourcesChange={onAttachmentSourcesChange}
         />
@@ -173,7 +162,6 @@ function ActionCard({
   folders,
   foldersLoading,
   messagingChannels,
-  availableMessagingProviders,
   attachmentSources,
   onAttachmentSourcesChange,
 }: {
@@ -194,7 +182,6 @@ function ActionCard({
   folders: OutlookFolder[];
   foldersLoading: boolean;
   messagingChannels: MessagingChannelOption[];
-  availableMessagingProviders: MessagingProviderOption[];
   attachmentSources: AttachmentSourceInput[];
   onAttachmentSourcesChange: (value: AttachmentSourceInput[]) => void;
 }) {
@@ -669,8 +656,6 @@ function ActionCard({
     />
   ) : null;
 
-  const canConnectMessagingApp = availableMessagingProviders.length > 0;
-
   const deliveryField = isMessagingNotification ? (
     <MessagingChannelField
       control={control}
@@ -747,11 +732,9 @@ function ActionCard({
   const draftReplyDeliverySection = isDraftReplyActionType(rawActionType) ? (
     <div className="space-y-4 border-t border-border pt-4">
       <DraftReplyReviewChannelsSection
-        emailAccountId={emailAccountId}
         delivery={draftReplyDelivery}
         selectedChannels={selectedMessagingChannels}
         connectedChannels={connectedMessagingChannels}
-        connectAppLabel={getConnectAppLabel(availableMessagingProviders)}
         errorMessage={deliveryErrorMessage}
         onChange={handleDraftReplyDeliveryChange}
       />
@@ -892,24 +875,7 @@ function ActionCard({
               {isDraftReplyAction ? "Delivery options" : "Delivery destination"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {deliveryField}
-            {connectedMessagingChannels.length === 0 &&
-            canConnectMessagingApp ? (
-              <div className="rounded-md border bg-muted/40 p-3 space-y-3">
-                <MutedText>
-                  Connect Slack, Telegram, or Teams to deliver outside email.
-                </MutedText>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={prefixPath(emailAccountId, "/channels")}>
-                      {getConnectAppLabel(availableMessagingProviders)}
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          <div className="space-y-4">{deliveryField}</div>
         </DialogContent>
       </Dialog>
 
@@ -929,19 +895,15 @@ function ActionCard({
 }
 
 function DraftReplyReviewChannelsSection({
-  emailAccountId,
   delivery,
   selectedChannels,
   connectedChannels,
-  connectAppLabel,
   errorMessage,
   onChange,
 }: {
-  emailAccountId: string;
   delivery: DraftReplyDelivery;
   selectedChannels: MessagingChannelOption[];
   connectedChannels: MessagingChannelOption[];
-  connectAppLabel: string;
   errorMessage?: string;
   onChange: (value: {
     includeEmail: boolean;
@@ -953,8 +915,6 @@ function DraftReplyReviewChannelsSection({
     (channel) => channel.id,
   );
   const canToggleEmail = selectedMessagingChannelIds.length > 0;
-  const hasConnectedMessagingDestination = connectedChannels.length > 0;
-
   return (
     <div className="space-y-4">
       <div className="space-y-3">
@@ -1033,14 +993,6 @@ function DraftReplyReviewChannelsSection({
           );
         })}
       </div>
-
-      {!hasConnectedMessagingDestination ? (
-        <Button asChild size="sm" variant="outline" className="w-fit">
-          <Link href={prefixPath(emailAccountId, "/channels")}>
-            {connectAppLabel}
-          </Link>
-        </Button>
-      ) : null}
 
       {errorMessage ? <ErrorMessage message={errorMessage} /> : null}
     </div>

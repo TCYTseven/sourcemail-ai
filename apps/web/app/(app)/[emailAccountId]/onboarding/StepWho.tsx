@@ -174,7 +174,7 @@ export function StepWho({
             <ScrollableFadeContainer
               ref={scrollContainerRef}
               className="grid gap-2 px-1 pt-6 pb-6"
-              fadeFromClass="from-slate-50"
+              fadeFromClass="from-background"
               height="h-[576px]"
             >
               {displayedRoles.map(({ value: roleName }) => {
@@ -188,7 +188,7 @@ export function StepWho({
                     className={cn(
                       "rounded-xl border bg-card p-4 text-card-foreground shadow-sm text-left flex items-center gap-4 transition-all",
                       watchedRole === roleName &&
-                        "border-blue-600 ring-2 ring-blue-100",
+                        "border-blue-500 ring-2 ring-blue-500/25",
                     )}
                     onClick={() => {
                       setValue("role", roleName);

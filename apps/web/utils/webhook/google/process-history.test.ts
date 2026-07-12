@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { processHistoryForUser } from "./process-history";
 import { getHistory } from "@/utils/gmail/history";
+import { getMessages } from "@/utils/gmail/message";
+import { processHistoryItem } from "@/utils/webhook/google/process-history-item";
 import {
   getWebhookEmailAccount,
   validateWebhookAccount,
@@ -17,6 +19,14 @@ vi.mock("@/utils/gmail/client", () => ({
 
 vi.mock("@/utils/gmail/history", () => ({
   getHistory: vi.fn(),
+}));
+
+vi.mock("@/utils/gmail/message", () => ({
+  getMessages: vi.fn(),
+}));
+
+vi.mock("@/utils/webhook/google/process-history-item", () => ({
+  processHistoryItem: vi.fn(),
 }));
 
 vi.mock("@/utils/webhook/validate-webhook-account", () => ({
@@ -46,9 +56,13 @@ describe("processHistoryForUser - 404 Handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getEmailProviderRateLimitState).mockResolvedValue(null);
+    vi.mocked(getMessages).mockResolvedValue({
+      messages: [],
+      nextPageToken: undefined,
+    });
   });
 
-  it("should reset lastSyncedHistoryId when Gmail returns 404 (expired historyId)", async () => {
+  it("backfills recent Gmail messages before advancing when historyId expires", async () => {
     const email = "user@test.com";
     const historyId = 2000;
     const emailAccount = {
@@ -79,6 +93,13 @@ describe("processHistoryForUser - 404 Handling", () => {
     const error404 = new Error("Requested entity was not found");
     (error404 as any).status = 404;
     vi.mocked(getHistory).mockRejectedValue(error404);
+    vi.mocked(getMessages)
+      .mockResolvedValueOnce({
+        messages: [{ id: "inbox-message-1", threadId: "thread-1" }],
+      })
+      .mockResolvedValueOnce({
+        messages: [{ id: "sent-message-1", threadId: "thread-2" }],
+      });
 
     const result = await processHistoryForUser(
       { emailAddress: email, historyId },
@@ -89,6 +110,42 @@ describe("processHistoryForUser - 404 Handling", () => {
     const jsonResponse = await (result as any).json();
     expect(jsonResponse).toEqual({ ok: true });
 
+    expect(getMessages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ labelIds: ["INBOX"], maxResults: 50 }),
+    );
+    expect(getMessages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ labelIds: ["SENT"], maxResults: 50 }),
+    );
+    expect(processHistoryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "messageAdded",
+        item: expect.objectContaining({
+          message: expect.objectContaining({
+            id: "inbox-message-1",
+            threadId: "thread-1",
+            labelIds: ["INBOX"],
+          }),
+        }),
+      }),
+      expect.any(Object),
+      expect.any(Object),
+    );
+    expect(processHistoryItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "messageAdded",
+        item: expect.objectContaining({
+          message: expect.objectContaining({
+            id: "sent-message-1",
+            threadId: "thread-2",
+            labelIds: ["SENT"],
+          }),
+        }),
+      }),
+      expect.any(Object),
+      expect.any(Object),
+    );
     // Verify lastSyncedHistoryId was updated to the current historyId via conditional update
     expect(prisma.$executeRaw).toHaveBeenCalled();
   });
@@ -251,6 +308,14 @@ describe("processHistoryForUser - 404 Handling", () => {
       expect.anything(),
       expect.objectContaining({ startHistoryId: "2000" }),
       expect.any(Object),
+    );
+    expect(getMessages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ labelIds: ["INBOX"], maxResults: 50 }),
+    );
+    expect(getMessages).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ labelIds: ["SENT"], maxResults: 50 }),
     );
     expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
   });

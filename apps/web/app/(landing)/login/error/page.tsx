@@ -14,7 +14,6 @@ import { useUser } from "@/hooks/useUser";
 import { LoadingContent } from "@/components/LoadingContent";
 import { Loading } from "@/components/Loading";
 import { WELCOME_PATH } from "@/utils/config";
-import { CrispChatLoggedOutVisible } from "@/components/CrispChat";
 import { getAndClearAuthErrorCookie } from "@/utils/auth-cookies";
 import { SUPPORT_EMAIL } from "@/utils/branding";
 
@@ -42,6 +41,11 @@ const errorMessages: Record<string, { title: string; description: string }> = {
     title: "Sign-in Session Expired",
     description:
       "Your sign-in link is no longer valid. This can happen if the login flow was opened twice, timed out, or already used. Please start sign-in again from the login page.",
+  },
+  account_link_failed: {
+    title: "Couldn't Connect Your Mailbox",
+    description:
+      "We signed you in with Google but couldn't finish connecting your mailbox. Please try signing in again. If this keeps happening, make sure the Gmail API is enabled in your Google Cloud project.",
   },
   requiresreconsent: {
     title: "Permissions need to be refreshed",
@@ -104,12 +108,8 @@ function LoginErrorContent() {
 export default function LogInErrorPage() {
   return (
     <BasicLayout>
-      <Suspense fallback={<Loading />}>
-        <LoginErrorContent />
-      </Suspense>
-
       <Suspense>
-        <CrispChatLoggedOutVisible />
+        <LoginErrorContent />
       </Suspense>
     </BasicLayout>
   );

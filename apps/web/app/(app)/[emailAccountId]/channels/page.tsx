@@ -1,12 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
+import { prefixPath } from "@/utils/path";
 
-import { PageWrapper } from "@/components/PageWrapper";
-import { Channels } from "./Channels";
-
-export default function ChannelsPage() {
-  return (
-    <PageWrapper>
-      <Channels />
-    </PageWrapper>
-  );
+export default async function ChannelsPage({
+  params,
+}: {
+  params: Promise<{ emailAccountId: string }>;
+}) {
+  const { emailAccountId } = await params;
+  redirect(prefixPath(emailAccountId, "/automation"));
 }

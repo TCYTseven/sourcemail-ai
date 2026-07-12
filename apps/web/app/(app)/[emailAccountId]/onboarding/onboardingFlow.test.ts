@@ -9,10 +9,9 @@ import {
 import { ActionType, SystemType } from "@/generated/prisma/enums";
 
 describe("getVisibleOnboardingStepKeys", () => {
-  it("returns the full onboarding flow when optional steps are available", () => {
+  it("returns the stripped core onboarding flow", () => {
     expect(
       getVisibleOnboardingStepKeys({
-        canInviteTeam: true,
         autoDraftDisabled: false,
       }),
     ).toEqual([
@@ -21,20 +20,16 @@ describe("getVisibleOnboardingStepKeys", () => {
       STEP_KEYS.DRAFT_REPLIES,
       STEP_KEYS.BULK_UNSUBSCRIBE,
       STEP_KEYS.WHO,
-      STEP_KEYS.COMPANY_SIZE,
-      STEP_KEYS.HOW_YOU_HEARD,
       STEP_KEYS.LABELS,
       STEP_KEYS.DRAFT,
       STEP_KEYS.CUSTOM_RULES,
-      STEP_KEYS.INVITE_TEAM,
       STEP_KEYS.INBOX_PROCESSED,
     ]);
   });
 
-  it("filters steps that are not available in the current context", () => {
+  it("filters draft setup steps when auto drafts are disabled", () => {
     expect(
       getVisibleOnboardingStepKeys({
-        canInviteTeam: false,
         autoDraftDisabled: true,
       }),
     ).toEqual([
@@ -42,30 +37,8 @@ describe("getVisibleOnboardingStepKeys", () => {
       STEP_KEYS.CHAT,
       STEP_KEYS.BULK_UNSUBSCRIBE,
       STEP_KEYS.WHO,
-      STEP_KEYS.COMPANY_SIZE,
-      STEP_KEYS.HOW_YOU_HEARD,
       STEP_KEYS.LABELS,
       STEP_KEYS.CUSTOM_RULES,
-      STEP_KEYS.INBOX_PROCESSED,
-    ]);
-  });
-
-  it("filters sales survey steps for self-hosted deployments", () => {
-    expect(
-      getVisibleOnboardingStepKeys({
-        canInviteTeam: true,
-        autoDraftDisabled: false,
-        isSelfHosted: true,
-      }),
-    ).toEqual([
-      STEP_KEYS.EMAILS_SORTED,
-      STEP_KEYS.CHAT,
-      STEP_KEYS.DRAFT_REPLIES,
-      STEP_KEYS.BULK_UNSUBSCRIBE,
-      STEP_KEYS.LABELS,
-      STEP_KEYS.DRAFT,
-      STEP_KEYS.CUSTOM_RULES,
-      STEP_KEYS.INVITE_TEAM,
       STEP_KEYS.INBOX_PROCESSED,
     ]);
   });
@@ -73,7 +46,6 @@ describe("getVisibleOnboardingStepKeys", () => {
 
 describe("getOnboardingStepIndex", () => {
   const stepKeys = getVisibleOnboardingStepKeys({
-    canInviteTeam: false,
     autoDraftDisabled: false,
   });
 

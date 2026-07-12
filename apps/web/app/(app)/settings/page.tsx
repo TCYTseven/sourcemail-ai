@@ -1,33 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import type { MouseEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronRightIcon,
   CreditCardIcon,
   MailIcon,
-  MessageCircleIcon,
-  MessagesSquareIcon,
-  PlugIcon,
-  SendIcon,
   SparklesIcon,
   UserIcon,
-  UsersIcon,
   WebhookIcon,
 } from "lucide-react";
 import { ApiKeysSection } from "@/app/(app)/[emailAccountId]/settings/ApiKeysSection";
 import { AppearanceSection } from "@/app/(app)/settings/AppearanceSection";
-import { TeamSection } from "@/app/(app)/settings/TeamSection";
 import { BillingSection } from "@/app/(app)/[emailAccountId]/settings/BillingSection";
 import { CleanupDraftsSection } from "@/app/(app)/[emailAccountId]/settings/CleanupDraftsSection";
-import { useSlackNotifications } from "@/app/(app)/[emailAccountId]/settings/ConnectedAppsSection";
 import { DeleteSection } from "@/app/(app)/[emailAccountId]/settings/DeleteSection";
 import { ModelSection } from "@/app/(app)/[emailAccountId]/settings/ModelSection";
-import { OrgAnalyticsConsentSection } from "@/app/(app)/[emailAccountId]/settings/OrgAnalyticsConsentSection";
 import { ResetAnalyticsSection } from "@/app/(app)/[emailAccountId]/settings/ResetAnalyticsSection";
 import { WebhookSection } from "@/app/(app)/[emailAccountId]/settings/WebhookSection";
-import { CopyRulesSection } from "@/app/(app)/[emailAccountId]/settings/CopyRulesSection";
 import { RuleImportExportSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/RuleImportExportSetting";
 import { ToggleAllRulesSection } from "@/app/(app)/[emailAccountId]/settings/ToggleAllRulesSection";
 import type { GetEmailAccountsResponse } from "@/app/api/user/email-accounts/route";
@@ -46,7 +36,6 @@ import {
   ItemActions,
 } from "@/components/ui/item";
 import { useAccounts } from "@/hooks/useAccounts";
-import { useMessagingChannels } from "@/hooks/useMessagingChannels";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { cn } from "@/utils";
 import { env } from "@/env";
@@ -57,20 +46,6 @@ export default function SettingsPage() {
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(
     null,
   );
-
-  const handleSlackConnected = useCallback(
-    (connectedEmailAccountId: string | null) => {
-      setExpandedAccountId(
-        connectedEmailAccountId ?? activeEmailAccountId ?? null,
-      );
-    },
-    [activeEmailAccountId],
-  );
-
-  useSlackNotifications({
-    enabled: true,
-    onSlackConnected: handleSlackConnected,
-  });
 
   const emailAccounts = useMemo(() => {
     const accounts = data?.emailAccounts ?? [];
@@ -128,12 +103,6 @@ export default function SettingsPage() {
             </ItemCard>
           </SettingsGroup>
         )}
-
-        <SettingsGroup icon={<UsersIcon className="size-5" />} title="Team">
-          <ItemCard>
-            <TeamSection />
-          </ItemCard>
-        </SettingsGroup>
 
         {!env.NEXT_PUBLIC_AI_MODEL_SETTINGS_DISABLED && (
           <SettingsGroup
@@ -201,19 +170,6 @@ function EmailAccountSettingsCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const { data: channelsData } = useMessagingChannels(emailAccount.id);
-
-  const connectedProviders = Array.from(
-    new Set(
-      channelsData?.channels
-        .filter((ch) => ch.isConnected)
-        .map((ch) => ch.provider) ?? [],
-    ),
-  );
-  const hasUnconnectedProvider = channelsData?.availableProviders?.some(
-    (p) => !connectedProviders.includes(p),
-  );
-
   return (
     <ItemCard>
       <div
@@ -238,29 +194,10 @@ function EmailAccountSettingsCard({
           </AvatarFallback>
         </Avatar>
         <span className="flex-1 text-sm font-medium">{emailAccount.email}</span>
-        {connectedProviders.map((provider) => (
-          <Badge
-            key={provider}
-            variant="secondary"
-            className="gap-1 text-xs font-normal"
-          >
-            <ProviderIcon provider={provider} className="size-3" />
-            {PROVIDER_LABELS[provider] ?? provider}
+        {emailAccount.id === allAccounts[0]?.id && (
+          <Badge variant="secondary" className="text-xs font-normal">
+            Active inbox
           </Badge>
-        ))}
-        {hasUnconnectedProvider && (
-          <Link
-            href={`/${emailAccount.id}/channels`}
-            onClick={(e: MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
-          >
-            <Badge
-              variant="outline"
-              className="gap-1 text-xs font-normal cursor-pointer hover:bg-muted"
-            >
-              <PlugIcon className="size-3" />
-              Connect Apps
-            </Badge>
-          </Link>
         )}
         <ChevronRightIcon
           className={cn(
@@ -272,45 +209,14 @@ function EmailAccountSettingsCard({
 
       {expanded && (
         <>
-          <OrgAnalyticsConsentSection emailAccountId={emailAccount.id} />
           <ToggleAllRulesSection emailAccountId={emailAccount.id} />
           <RuleImportExportSetting emailAccountId={emailAccount.id} />
-          <CopyRulesSection
-            emailAccountId={emailAccount.id}
-            emailAccountEmail={emailAccount.email}
-            allAccounts={allAccounts}
-          />
           <CleanupDraftsSection emailAccountId={emailAccount.id} />
           <ResetAnalyticsSection emailAccountId={emailAccount.id} />
         </>
       )}
     </ItemCard>
   );
-}
-
-const PROVIDER_LABELS: Record<string, string> = {
-  SLACK: "Slack",
-  TEAMS: "Teams",
-  TELEGRAM: "Telegram",
-};
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider: string;
-  className?: string;
-}) {
-  switch (provider) {
-    case "SLACK":
-      return <MessagesSquareIcon className={className} />;
-    case "TEAMS":
-      return <MessageCircleIcon className={className} />;
-    case "TELEGRAM":
-      return <SendIcon className={className} />;
-    default:
-      return <PlugIcon className={className} />;
-  }
 }
 
 function SettingsGroup({

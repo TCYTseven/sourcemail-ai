@@ -119,7 +119,7 @@ export function LoginForm({
         <UIButton
           variant="ghost"
           size="lg"
-          className="w-full hover:scale-105 transition-transform"
+          className="w-full"
           loading={loadingApple}
           onClick={() =>
             handleSocialSignIn({
@@ -136,12 +136,7 @@ export function LoginForm({
       ) : null}
 
       {showSsoLogin ? (
-        <UIButton
-          variant="ghost"
-          size="lg"
-          className="w-full hover:scale-105 transition-transform"
-          asChild
-        >
+        <UIButton variant="ghost" size="lg" className="w-full" asChild>
           <Link href="/login/sso">Sign in with SSO</Link>
         </UIButton>
       ) : null}

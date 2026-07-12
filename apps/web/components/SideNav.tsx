@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { getEmailTerminology } from "@/utils/terminology";
@@ -10,12 +10,9 @@ import {
   ArrowLeftIcon,
   BarChartBigIcon,
   BrushIcon,
-  CalendarIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   FileIcon,
-  FileTextIcon,
-  HardDriveIcon,
   InboxIcon,
   type LucideIcon,
   MailsIcon,
@@ -28,7 +25,6 @@ import {
   SparklesIcon,
   TagIcon,
   Users2Icon,
-  ZapIcon,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useComposeModal } from "@/providers/ComposeModalProvider";
@@ -51,11 +47,7 @@ import { SideNavMenu } from "@/components/SideNavMenu";
 import { CommandShortcut } from "@/components/ui/command";
 import { useSplitLabels } from "@/hooks/useLabels";
 import { LoadingContent } from "@/components/LoadingContent";
-import {
-  useCleanerEnabled,
-  useIntegrationsEnabled,
-  useMeetingBriefsEnabled,
-} from "@/hooks/useFeatureFlags";
+import { useCleanerEnabled } from "@/hooks/useFeatureFlags";
 import { AccountSwitcher } from "@/components/AccountSwitcher";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { prefixPath } from "@/utils/path";
@@ -76,8 +68,6 @@ type NavItem = {
 
 export const useNavigation = () => {
   const showCleaner = useCleanerEnabled();
-  const showMeetingBriefs = useMeetingBriefsEnabled();
-  const showIntegrations = useIntegrationsEnabled();
 
   const { emailAccount, emailAccountId, provider } = useAccount();
   const currentEmailAccountId = emailAccount?.id || emailAccountId;
@@ -85,19 +75,19 @@ export const useNavigation = () => {
   const manageItems: NavItem[] = useMemo(
     () => [
       {
-        name: "Chat",
+        name: "Inbox",
+        href: prefixPath(currentEmailAccountId, "/mail"),
+        icon: InboxIcon,
+      },
+      {
+        name: "AI Chat",
         href: prefixPath(currentEmailAccountId, "/assistant"),
         icon: MessageSquareIcon,
       },
       {
-        name: "Assistant",
+        name: "Rules & Drafts",
         href: prefixPath(currentEmailAccountId, "/automation"),
         icon: SparklesIcon,
-      },
-      {
-        name: "Channels",
-        href: prefixPath(currentEmailAccountId, "/channels"),
-        icon: MessagesSquareIcon,
       },
     ],
     [currentEmailAccountId],
@@ -134,46 +124,9 @@ export const useNavigation = () => {
     [currentEmailAccountId, provider, showCleaner],
   );
 
-  const moreItems: NavItem[] = useMemo(
-    () => [
-      {
-        name: "Calendars",
-        href: prefixPath(currentEmailAccountId, "/calendars"),
-        icon: CalendarIcon,
-      },
-      ...(showMeetingBriefs
-        ? [
-            {
-              name: "Meeting Briefs",
-              href: prefixPath(currentEmailAccountId, "/briefs"),
-              icon: FileTextIcon,
-            },
-          ]
-        : []),
-      {
-        name: "Attachments",
-        href: prefixPath(currentEmailAccountId, "/drive"),
-        icon: HardDriveIcon,
-        new: false,
-      },
-      ...(showIntegrations
-        ? [
-            {
-              name: "Integrations",
-              href: prefixPath(currentEmailAccountId, "/integrations"),
-              icon: ZapIcon,
-              beta: true,
-            },
-          ]
-        : []),
-    ],
-    [currentEmailAccountId, showMeetingBriefs, showIntegrations],
-  );
-
   return {
     manageItems,
     cleanupItems,
-    moreItems,
   };
 };
 
@@ -232,14 +185,6 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigation = useNavigation();
   const path = usePathname();
   const showMailNav = path.includes("/mail") || path.includes("/compose");
-  const isMoreActive = navigation.moreItems.some(
-    (item) => path === item.href || path.startsWith(`${item.href}/`),
-  );
-  const [showMoreItems, setShowMoreItems] = useState(isMoreActive);
-
-  useEffect(() => {
-    if (isMoreActive) setShowMoreItems(true);
-  }, [isMoreActive]);
 
   const visibleBottomLinks = useMemo(
     () =>
@@ -263,7 +208,7 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {state.includes("left-sidebar") ? (
           <div className="flex items-center rounded-md pl-2 pr-0.5 py-3 text-foreground justify-between">
             <Link href="/setup">
-              <Logo className="h-3.5" />
+              <Logo className="h-6 w-6" />
             </Link>
             <SidebarTrigger name="left-sidebar" />
           </div>
@@ -293,26 +238,6 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   items={navigation.cleanupItems}
                   activeHref={path}
                 />
-              </SidebarGroup>
-              <SidebarGroup>
-                <SidebarGroupLabel asChild>
-                  <button
-                    type="button"
-                    className="w-full cursor-pointer gap-1"
-                    onClick={() => setShowMoreItems((value) => !value)}
-                    aria-expanded={showMoreItems}
-                  >
-                    {showMoreItems ? (
-                      <ChevronDownIcon className="size-3.5" />
-                    ) : (
-                      <ChevronRightIcon className="size-3.5" />
-                    )}
-                    <span>Tools</span>
-                  </button>
-                </SidebarGroupLabel>
-                {showMoreItems && (
-                  <SideNavMenu items={navigation.moreItems} activeHref={path} />
-                )}
               </SidebarGroup>
             </>
           )}

@@ -13,8 +13,8 @@ import { isGoogleOauthEmulationEnabled } from "@/utils/google/oauth";
 import { getEnabledLoginProviders } from "@/utils/oauth/login-providers";
 import { AlertBasic } from "@/components/Alert";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { WELCOME_PATH } from "@/utils/config";
-import { CrispChatLoggedOutVisible } from "@/components/CrispChat";
 import { MutedText } from "@/components/Typography";
 import { normalizeInternalPath } from "@/utils/path";
 import {
@@ -45,39 +45,37 @@ export default async function AuthenticationPage(props: {
   const enabledProviders = Array.from(getEnabledLoginProviders());
 
   return (
-    <div className="flex h-screen flex-col justify-center text-foreground">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col text-center">
-          <h1 className="font-title text-2xl text-foreground">Sign In</h1>
-          <p className="mt-4 text-muted-foreground">
-            Your AI personal assistant for email.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12 text-foreground">
+      <div className="mb-8">
+        <Link href="/">
+          <Logo className="h-10 w-10" />
+        </Link>
+      </div>
+      <div className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <h1 className="font-title text-2xl font-semibold">Sign in</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Connect your inbox to {BRAND_NAME}.
           </p>
         </div>
-        <div className="mt-4">
-          <Suspense>
-            <LoginForm
-              enabledProviders={enabledProviders}
-              useGoogleOauthEmulator={isGoogleOauthEmulationEnabled()}
-            />
-          </Suspense>
-        </div>
 
-        {searchParams?.error && <ErrorAlert error={searchParams?.error} />}
+        <Suspense>
+          <LoginForm
+            enabledProviders={enabledProviders}
+            useGoogleOauthEmulator={isGoogleOauthEmulationEnabled()}
+          />
+        </Suspense>
+
+        {searchParams?.error ? <ErrorAlert error={searchParams.error} /> : null}
 
         {!isSelfHosted ? (
-          <MutedText className="px-8 pt-10 text-center">
-            By clicking continue, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="underline underline-offset-4 hover:text-foreground"
-            >
-              Terms of Service
+          <MutedText className="text-center text-xs">
+            By continuing, you agree to our{" "}
+            <Link href="/terms" className="underline underline-offset-4">
+              Terms
             </Link>{" "}
             and{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-4 hover:text-foreground"
-            >
+            <Link href="/privacy" className="underline underline-offset-4">
               Privacy Policy
             </Link>
             .
@@ -109,27 +107,22 @@ function LoginFooter({
     }
 
     return (
-      <MutedText className="whitespace-pre-line px-4 pt-10 text-center">
+      <MutedText className="whitespace-pre-line text-center text-xs">
         {selfHostedLoginFooterText}
       </MutedText>
     );
   }
 
   return (
-    <MutedText
-      className={
-        isSelfHosted ? "px-4 pt-10 text-center" : "px-4 pt-4 text-center"
-      }
-    >
-      {getPossessiveBrandName()} use and transfer of information received from
-      Google APIs to any other app will adhere to{" "}
+    <MutedText className="text-center text-xs">
+      {getPossessiveBrandName()} use of Google APIs adheres to the{" "}
       <a
         href="https://developers.google.com/terms/api-services-user-data-policy"
-        className="underline underline-offset-4 hover:text-foreground"
+        className="underline underline-offset-4"
       >
-        Google API Services User Data
-      </a>{" "}
-      Policy, including the Limited Use requirements.
+        Google API Services User Data Policy
+      </a>
+      .
     </MutedText>
   );
 }
@@ -177,15 +170,10 @@ function ErrorAlert({ error }: { error: string }) {
   }
 
   return (
-    <>
-      <AlertBasic
-        variant="destructive"
-        title="Error logging in"
-        description={`There was an error logging in. Please try logging in again. If this error persists please contact support at ${SUPPORT_EMAIL}`}
-      />
-      <Suspense>
-        <CrispChatLoggedOutVisible />
-      </Suspense>
-    </>
+    <AlertBasic
+      variant="destructive"
+      title="Error logging in"
+      description={`There was an error logging in. Please try again. If this persists, contact ${SUPPORT_EMAIL}.`}
+    />
   );
 }

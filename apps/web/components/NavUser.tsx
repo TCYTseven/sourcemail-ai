@@ -9,7 +9,6 @@ import {
   MessageCircleReplyIcon,
   ShieldCheckIcon,
   LogOutIcon,
-  Building2Icon,
   CrownIcon,
   GiftIcon,
   GlobeIcon,
@@ -31,7 +30,6 @@ import { isGoogleProvider } from "@/utils/email/provider-types";
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EXTENSION_URL } from "@/utils/config";
-import { useCurrentOrganization } from "@/hooks/useCurrentOrganization";
 import { env } from "@/env";
 import { Referrals } from "@/components/ReferralDialog";
 
@@ -41,9 +39,6 @@ export function NavUser() {
   const [isReferralDialogOpen, setIsReferralDialogOpen] = useState(false);
 
   const currentEmailAccountId = emailAccount?.id || emailAccountId;
-  const organization = useCurrentOrganization();
-  const hasOrganization = !!organization;
-  const organizationName = organization?.name;
 
   const isExpandedSidebar = state.includes("left-sidebar");
 
@@ -72,7 +67,7 @@ export function NavUser() {
                     {emailAccount.name || emailAccount.email}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {organizationName || emailAccount.email}
+                    {emailAccount.email}
                   </span>
                 </div>
                 <ChevronsUpDownIcon className="ml-auto size-4" />
@@ -96,31 +91,6 @@ export function NavUser() {
                 Settings
               </Link>
             </DropdownMenuItem>
-            {!hasOrganization && (
-              <DropdownMenuItem asChild>
-                <Link
-                  href={prefixPath(
-                    currentEmailAccountId,
-                    "/organization/create",
-                  )}
-                  onClick={() => closeMobileSidebar("left-sidebar")}
-                >
-                  <Building2Icon className="mr-2 size-4" />
-                  Create organization
-                </Link>
-              </DropdownMenuItem>
-            )}
-            {hasOrganization && (
-              <DropdownMenuItem asChild>
-                <Link
-                  href={prefixPath(currentEmailAccountId, "/organization")}
-                  onClick={() => closeMobileSidebar("left-sidebar")}
-                >
-                  <Building2Icon className="mr-2 size-4" />
-                  My Organization
-                </Link>
-              </DropdownMenuItem>
-            )}
             {isGoogleProvider(provider) && (
               <DropdownMenuItem asChild>
                 <Link

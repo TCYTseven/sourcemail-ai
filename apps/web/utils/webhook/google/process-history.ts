@@ -10,6 +10,7 @@ import {
 } from "@/utils/webhook/google/types";
 import { processHistoryItem } from "@/utils/webhook/google/process-history-item";
 import { getHistory } from "@/utils/gmail/history";
+import { getMessages } from "@/utils/gmail/message";
 import {
   validateWebhookAccount,
   getWebhookEmailAccount,
@@ -25,6 +26,7 @@ import type { gmail_v1 } from "@googleapis/gmail";
 
 const MAX_GMAIL_HISTORY_ID_GAP = 3000;
 const GMAIL_HISTORY_PAGE_SIZE = 500;
+const GMAIL_RECOVERY_BACKFILL_PAGE_SIZE = 50;
 
 export async function processHistoryForUser(
   decodedData: {
@@ -135,7 +137,23 @@ export async function processHistoryForUser(
           logger,
         });
 
+        const historyProcessOptions = {
+          gmail,
+          accessToken: accountAccessToken,
+          hasAutomationRules,
+          hasAiAccess: userHasAiAccess,
+          rules: validatedEmailAccount.rules,
+          emailAccount: {
+            ...validatedEmailAccount,
+            account: {
+              provider: accountProvider,
+            },
+          },
+        };
+
         if (historyResult.status === "expired") {
+          await backfillRecentGmailMessages(historyProcessOptions, logger);
+
           await updateLastSyncedHistoryId({
             emailAccountId: validatedEmailAccount.id,
             lastSyncedHistoryId: historyId.toString(),
@@ -144,6 +162,10 @@ export async function processHistoryForUser(
         }
 
         const historyEntries = historyResult.history;
+
+        if (historyResult.skippedHistoryIds > 0) {
+          await backfillRecentGmailMessages(historyProcessOptions, logger);
+        }
 
         if (historyEntries.length > 0) {
           logger.info("Processing history", {
@@ -157,18 +179,8 @@ export async function processHistoryForUser(
 
           await processHistory(
             {
+              ...historyProcessOptions,
               history: historyEntries,
-              gmail,
-              accessToken: accountAccessToken,
-              hasAutomationRules,
-              hasAiAccess: userHasAiAccess,
-              rules: validatedEmailAccount.rules,
-              emailAccount: {
-                ...validatedEmailAccount,
-                account: {
-                  provider: accountProvider,
-                },
-              },
             },
             logger,
           );
@@ -283,6 +295,76 @@ async function processHistory(options: ProcessHistoryOptions, logger: Logger) {
     emailAccountId,
     lastSyncedHistoryId,
   });
+}
+
+async function backfillRecentGmailMessages(
+  options: Omit<ProcessHistoryOptions, "history">,
+  logger: Logger,
+) {
+  const { gmail } = options;
+
+  const [inboxPage, sentPage] = await Promise.all([
+    getMessages(gmail, {
+      labelIds: [GmailLabel.INBOX],
+      maxResults: GMAIL_RECOVERY_BACKFILL_PAGE_SIZE,
+    }),
+    getMessages(gmail, {
+      labelIds: [GmailLabel.SENT],
+      maxResults: GMAIL_RECOVERY_BACKFILL_PAGE_SIZE,
+    }),
+  ]);
+
+  const messages = uniqBy(
+    [
+      ...inboxPage.messages.map((message) => ({
+        message,
+        labelIds: [GmailLabel.INBOX],
+      })),
+      ...sentPage.messages.map((message) => ({
+        message,
+        labelIds: [GmailLabel.SENT],
+      })),
+    ],
+    (entry) => entry.message.id,
+  );
+
+  logger.warn("Backfilling recent Gmail messages after history gap", {
+    inboxMessageCount: inboxPage.messages.length,
+    sentMessageCount: sentPage.messages.length,
+    backfillMessageCount: messages.length,
+    maxResultsPerMailbox: GMAIL_RECOVERY_BACKFILL_PAGE_SIZE,
+  });
+
+  for (const entry of messages) {
+    const log = logger.with({
+      messageId: entry.message.id,
+      threadId: entry.message.threadId,
+      gmailBackfill: true,
+    });
+
+    try {
+      await processHistoryItem(
+        {
+          type: HistoryEventType.MESSAGE_ADDED,
+          item: {
+            message: {
+              id: entry.message.id,
+              threadId: entry.message.threadId,
+              labelIds: entry.labelIds,
+            },
+          },
+        },
+        { ...options, history: [] },
+        log,
+      );
+    } catch (error) {
+      captureException(error, {
+        userEmail: options.emailAccount.email,
+        extra: { messageId: entry.message.id, gmailBackfill: true },
+      });
+      logger.error("Error processing Gmail backfill item", { error });
+    }
+  }
 }
 
 /**

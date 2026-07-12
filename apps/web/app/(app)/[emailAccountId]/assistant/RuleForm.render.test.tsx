@@ -300,7 +300,7 @@ describe("RuleForm", () => {
     ).toBeNull();
   });
 
-  it("keeps draft reply destinations grouped when persisted actions arrive out of order", () => {
+  it("keeps draft replies email-first when persisted messaging actions arrive out of order", () => {
     mockUseMessagingChannels.mockReturnValue({
       data: {
         channels: [
@@ -413,8 +413,8 @@ describe("RuleForm", () => {
 
     expect(screen.getAllByText("Draft to")).toHaveLength(1);
     expect(screen.getByText("Email")).toBeTruthy();
-    expect(screen.getByText("Slack DM")).toBeTruthy();
-    expect(screen.getByText("Telegram DM")).toBeTruthy();
+    expect(screen.queryByText("Slack DM")).toBeNull();
+    expect(screen.queryByText("Telegram DM")).toBeNull();
   });
 
   it("does not show disconnected draft reply destinations as selected options", () => {

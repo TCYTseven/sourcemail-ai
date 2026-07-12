@@ -4,6 +4,7 @@ import { createReferral } from "@/utils/referral/referral-code";
 import { captureException } from "@/utils/error";
 import { saveTokens } from "@/utils/auth/save-tokens";
 import { createOutlookClient } from "@/utils/outlook/client";
+import { fetchGoogleOpenIdProfile } from "@/utils/google/oauth";
 import {
   betterAuthConfig,
   handleLinkAccount,
@@ -44,8 +45,11 @@ vi.mock("@/utils/error-messages", () => ({
     ACCOUNT_DISCONNECTED: "Account disconnected",
   },
 }));
-vi.mock("@googleapis/people", () => ({
-  people: vi.fn(),
+vi.mock("@/utils/google/oauth", () => ({
+  fetchGoogleOpenIdProfile: vi.fn(),
+  isGoogleOauthEmulationEnabled: vi.fn().mockReturnValue(false),
+  getGoogleOauthDiscoveryUrl: vi.fn(),
+  getGoogleOauthIssuer: vi.fn(),
 }));
 vi.mock("@googleapis/gmail", () => ({
   auth: {
@@ -320,9 +324,47 @@ describe("handleLinkAccount", () => {
         providerId: "google",
         accessToken: null,
       } as any),
-    ).rejects.toThrow("Missing access token during account linking.");
+    ).rejects.toMatchObject({
+      message: "account_link_failed",
+      body: {
+        code: "account_link_failed",
+        message: "account_link_failed",
+      },
+    });
 
     expect(prisma.emailAccount.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("links a Google mailbox using the OpenID profile endpoint", async () => {
+    vi.mocked(fetchGoogleOpenIdProfile).mockResolvedValue({
+      email: "user@example.com",
+      name: "Test User",
+      picture: "https://example.com/avatar.png",
+      sub: "google-sub",
+    });
+    prisma.emailAccount.findUnique.mockResolvedValue(null);
+    prisma.user.findUnique.mockResolvedValue({
+      email: "user@example.com",
+      name: "Test User",
+      image: null,
+    } as any);
+    prisma.emailAccount.upsert.mockResolvedValue({
+      id: "email_account_1",
+    } as any);
+    prisma.account.update.mockResolvedValue({} as any);
+    prisma.$transaction.mockImplementation((operations) =>
+      Promise.all(operations as Promise<unknown>[]),
+    );
+
+    await handleLinkAccount({
+      id: "account_1",
+      userId: "user_1",
+      providerId: "google",
+      accessToken: "access_token",
+    } as any);
+
+    expect(fetchGoogleOpenIdProfile).toHaveBeenCalledWith("access_token");
+    expect(prisma.emailAccount.upsert).toHaveBeenCalled();
   });
 
   it("raises a Better Auth error code when the mailbox belongs to another user", async () => {

@@ -7,7 +7,7 @@ import { ChatIllustration } from "@/app/(app)/[emailAccountId]/onboarding/illust
 
 export function StepChat({ onNext }: { onNext: () => void }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="flex flex-col items-center text-center max-w-md">
         <div className="mb-6 h-[240px] flex items-end justify-center">
           <ChatIllustration />
@@ -16,8 +16,8 @@ export function StepChat({ onNext }: { onNext: () => void }) {
         <PageHeading className="mb-3">A chat that runs your email</PageHeading>
 
         <TypographyP className="text-muted-foreground mb-8">
-          Clean up, draft replies, set up rules. Works in Slack, Telegram, or
-          here, and pings you when you're needed.
+          Clean up your inbox, draft replies, and set up rules from one focused
+          assistant.
         </TypographyP>
 
         <div className="flex flex-col gap-2 w-full max-w-xs">

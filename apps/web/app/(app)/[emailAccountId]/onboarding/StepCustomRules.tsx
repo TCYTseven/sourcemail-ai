@@ -24,8 +24,8 @@ export function StepCustomRules({
           <div className="text-center mt-4 max-w-lg mx-auto">
             <PageHeading>Custom rules</PageHeading>
             <TypographyP className="mt-2 text-left">
-              We've set up the basics, but that's just the beginning. Your AI
-              assistant can handle any email workflow you'd give to a human.
+              We've set up the basics. Add a master prompt or rule whenever you
+              want the assistant to handle a repeat inbox workflow.
             </TypographyP>
             <TypographyP className="mt-2 text-left">For example:</TypographyP>
             <ul className="list-disc list-inside space-y-1 text-left leading-7 text-muted-foreground ">
@@ -44,14 +44,14 @@ export function StepCustomRules({
         </OnboardingWrapper>
       </div>
 
-      <div className="fixed top-0 right-0 w-1/2 h-screen bg-white items-center justify-center hidden xl:flex px-10">
-        <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200">
+      <div className="fixed top-0 right-0 w-1/2 h-screen bg-background items-center justify-center hidden xl:flex px-10">
+        <div className="rounded-2xl p-4 bg-card border border-border">
           <Image
             src="/images/onboarding/custom-rules.png"
             alt="Custom rules"
             width={1200}
             height={800}
-            className="rounded-xl border border-slate-200"
+            className="rounded-xl border border-border"
           />
         </div>
       </div>

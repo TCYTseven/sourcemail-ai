@@ -1,9 +1,5 @@
-import { redirectToEmailAccountPath } from "@/utils/account";
+import { redirect } from "next/navigation";
 
-export default async function DrivePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  await redirectToEmailAccountPath("/drive", await searchParams);
+export default async function DrivePage() {
+  redirect("/automation");
 }

@@ -2,24 +2,9 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import prisma from "@/utils/__mocks__/prisma";
 
-const { mockEnv, mockLogger } = vi.hoisted(() => ({
-  mockEnv: {
-    meetingBriefsEnabled: false,
-    bookingLinksEnabled: false,
-  },
+const { mockLogger } = vi.hoisted(() => ({
   mockLogger: {
     error: vi.fn(),
-  },
-}));
-
-vi.mock("@/env", () => ({
-  env: {
-    get NEXT_PUBLIC_MEETING_BRIEFS_ENABLED() {
-      return mockEnv.meetingBriefsEnabled;
-    },
-    get NEXT_PUBLIC_BOOKING_LINKS_ENABLED() {
-      return mockEnv.bookingLinksEnabled;
-    },
   },
 }));
 
@@ -42,13 +27,15 @@ import { GET } from "./route";
 describe("GET /api/user/setup-progress", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockEnv.meetingBriefsEnabled = false;
-    mockEnv.bookingLinksEnabled = false;
   });
 
-  it("omits the calendar setup step when calendar features are disabled", async () => {
+  it("counts only the core assistant and inbox cleanup setup steps", async () => {
     prisma.emailAccount.findUnique.mockResolvedValue(
-      createEmailAccount({ calendarConnections: [{ id: "connection-1" }] }),
+      createEmailAccount({
+        rules: [],
+        newsletters: [],
+        dismissedHints: [],
+      }),
     );
 
     const response = await GET(createRequest());
@@ -58,19 +45,23 @@ describe("GET /api/user/setup-progress", () => {
       steps: {
         aiAssistant: false,
         bulkUnsubscribe: false,
-        calendarConnected: true,
       },
       completed: 0,
       total: 2,
       isComplete: false,
-      showCalendarStep: false,
     });
+    expect(body.steps).not.toHaveProperty("calendarConnected");
+    expect(body).not.toHaveProperty("teamInvite");
+    expect(body).not.toHaveProperty("tabsExtensionCompleted");
   });
 
-  it("includes the calendar setup step when a calendar feature is enabled", async () => {
-    mockEnv.meetingBriefsEnabled = true;
+  it("uses rules and newsletter stats as setup completion signals", async () => {
     prisma.emailAccount.findUnique.mockResolvedValue(
-      createEmailAccount({ calendarConnections: [] }),
+      createEmailAccount({
+        rules: [{ id: "rule-1" }],
+        newsletters: [{ id: "newsletter-1" }],
+        dismissedHints: [],
+      }),
     );
 
     const response = await GET(createRequest());
@@ -78,40 +69,29 @@ describe("GET /api/user/setup-progress", () => {
 
     expect(body).toMatchObject({
       steps: {
-        aiAssistant: false,
-        bulkUnsubscribe: false,
-        calendarConnected: false,
+        aiAssistant: true,
+        bulkUnsubscribe: true,
       },
-      completed: 0,
-      total: 3,
-      isComplete: false,
-      showCalendarStep: true,
+      completed: 2,
+      total: 2,
+      isComplete: true,
     });
   });
 });
 
 function createEmailAccount({
-  calendarConnections,
+  rules,
+  newsletters,
+  dismissedHints,
 }: {
-  calendarConnections: { id: string }[];
+  rules: { id: string }[];
+  newsletters: { id: string }[];
+  dismissedHints: string[];
 }) {
   return {
-    rules: [],
-    newsletters: [],
-    calendarConnections,
-    user: { dismissedHints: [] },
-    members: [
-      {
-        role: "member",
-        organizationId: "organization-1",
-        organization: {
-          _count: {
-            members: 1,
-            invitations: 0,
-          },
-        },
-      },
-    ],
+    rules,
+    newsletters,
+    user: { dismissedHints },
   };
 }
 

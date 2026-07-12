@@ -21,7 +21,6 @@ import {
   isMicrosoftProvider,
 } from "@/utils/email/provider-types";
 import { captureException } from "@/utils/error";
-import { getContactsClient as getGoogleContactsClient } from "@/utils/gmail/client";
 import { SCOPES as GMAIL_SCOPES } from "@/utils/gmail/scopes";
 import {
   fetchGoogleOpenIdProfile,
@@ -50,6 +49,7 @@ import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("auth");
 const EMAIL_ALREADY_LINKED_ERROR = "email_already_linked";
+const ACCOUNT_LINK_FAILED_ERROR = "account_link_failed";
 const useGoogleOauthEmulator = isGoogleOauthEmulationEnabled();
 const useMicrosoftOauthEmulator = isMicrosoftEmulationEnabled();
 
@@ -323,7 +323,7 @@ export const betterAuthConfig = betterAuth({
     },
   },
   onAPIError: {
-    throw: true,
+    throw: false,
     onError: (error: unknown, ctx: AuthContext) => {
       logger.error("Auth API encountered an error", { error, ctx });
     },
@@ -490,29 +490,12 @@ export async function handleReferralOnSignUp({
 // TODO: move into email provider instead of checking the provider type
 async function getProfileData(providerId: string, accessToken: string) {
   if (isGoogleProvider(providerId)) {
-    if (useGoogleOauthEmulator) {
-      const profile = await fetchGoogleOpenIdProfile(accessToken);
-
-      return {
-        email: profile.email?.toLowerCase(),
-        name: profile.name,
-        image: profile.picture ?? null,
-      };
-    }
-
-    const contactsClient = getGoogleContactsClient({ accessToken });
-    const profileResponse = await contactsClient.people.get({
-      resourceName: "people/me",
-      personFields: "emailAddresses,names,photos",
-    });
+    const profile = await fetchGoogleOpenIdProfile(accessToken);
 
     return {
-      email: profileResponse.data.emailAddresses
-        ?.find((e) => e.metadata?.primary)
-        ?.value?.toLowerCase(),
-      name: profileResponse.data.names?.find((n) => n.metadata?.primary)
-        ?.displayName,
-      image: profileResponse.data.photos?.find((p) => p.metadata?.primary)?.url,
+      email: profile.email?.toLowerCase(),
+      name: profile.name,
+      image: profile.picture ?? null,
     };
   }
 
@@ -568,7 +551,10 @@ export async function handleLinkAccount(account: Account) {
       logger.error(
         "[linkAccount] No access_token found in data, cannot fetch profile.",
       );
-      throw new Error("Missing access token during account linking.");
+      throw APIError.from("BAD_REQUEST", {
+        message: ACCOUNT_LINK_FAILED_ERROR,
+        code: ACCOUNT_LINK_FAILED_ERROR,
+      });
     }
     const profileData = await getProfileData(
       account.providerId,
@@ -587,7 +573,10 @@ export async function handleLinkAccount(account: Account) {
       logger.error(
         "[linkAccount] Primary email could not be determined from profile.",
       );
-      throw new Error("Primary email not found for linked account.");
+      throw APIError.from("BAD_REQUEST", {
+        message: ACCOUNT_LINK_FAILED_ERROR,
+        code: ACCOUNT_LINK_FAILED_ERROR,
+      });
     }
 
     const normalizedEmail = primaryEmail.trim().toLowerCase();
@@ -727,7 +716,11 @@ export async function handleLinkAccount(account: Account) {
     captureException(error, {
       extra: { userId: account.userId, location: "linkAccount" },
     });
-    throw error;
+    if (error instanceof APIError) throw error;
+    throw APIError.from("BAD_REQUEST", {
+      message: ACCOUNT_LINK_FAILED_ERROR,
+      code: ACCOUNT_LINK_FAILED_ERROR,
+    });
   }
 }
 

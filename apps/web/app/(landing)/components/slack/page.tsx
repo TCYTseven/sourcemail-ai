@@ -55,11 +55,11 @@ type SlackPreview = {
 const slackPreviews: SlackPreview[] = [
   {
     title: "Channel confirmation",
-    text: "✅ Inbox Zero connected! You can mention <@UAPP123> in this channel to chat about your emails. If you enable meeting briefs or attachment filing notifications, I can send those here too.",
+    text: "✅ LassoMail connected! You can mention <@UAPP123> in this channel to chat about your emails. If you enable meeting briefs or attachment filing notifications, I can send those here too.",
   },
   {
     title: "Connection onboarding DM",
-    text: "✅ Inbox Zero connected. Next, choose a private channel in Inbox Zero Settings for meeting brief and attachment notifications, then invite <@UAPP123> there. You can also DM me anytime to chat about your emails.",
+    text: "✅ LassoMail connected. Next, choose a private channel in LassoMail Settings for meeting brief and attachment notifications, then invite <@UAPP123> there. You can also DM me anytime to chat about your emails.",
   },
   {
     title: "Automation channel message",
@@ -227,7 +227,7 @@ export default function SlackComponentsPage() {
           <div className="space-y-2">
             <PageHeading>Slack Components</PageHeading>
             <PageSubHeading>
-              Storybook-style previews for Slack messages sent by Inbox Zero.
+              Storybook-style previews for Slack messages sent by LassoMail.
             </PageSubHeading>
           </div>
         </div>
@@ -259,7 +259,7 @@ function SlackPreviewCard({ preview }: { preview: SlackPreview }) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className="text-[15px] font-bold leading-5 text-[#f8f8f8]">
-                Inbox Zero
+                LassoMail
               </span>
               <span className="rounded bg-[#383a40] px-1 text-[10px] font-bold leading-4 text-[#d1d2d3]">
                 APP
@@ -465,7 +465,7 @@ function renderSlackLink(part: string, index: number) {
   const value = part.slice(1, -1);
 
   if (value.startsWith("@")) {
-    const displayName = value === "@UAPP123" ? "@Inbox Zero" : value;
+    const displayName = value === "@UAPP123" ? "@LassoMail" : value;
 
     return (
       <span

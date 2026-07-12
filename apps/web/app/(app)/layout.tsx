@@ -17,7 +17,6 @@ import { ProviderRateLimitBanner } from "@/app/(app)/ProviderRateLimitBanner";
 import { QueueInitializer } from "@/store/QueueInitializer";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { EmailViewer } from "@/components/EmailViewer";
-import { AnnouncementDialog } from "@/components/feature-announcements/AnnouncementDialog";
 import { captureException } from "@/utils/error";
 import prisma from "@/utils/prisma";
 import { createScopedLogger } from "@/utils/logger";
@@ -33,7 +32,7 @@ const inter = Inter({
 });
 
 export const viewport = {
-  themeColor: "#FFF",
+  themeColor: "#0a0a0f",
   // safe area for iOS PWA
   userScalable: false,
   initialScale: 1,
@@ -80,7 +79,6 @@ export default async function AppLayout({
             {children}
           </SideNavWithTopNav>
           <EmailViewer />
-          <AnnouncementDialog />
           <ErrorBoundary extra={{ component: "AppLayout" }}>
             <PostHogIdentify />
 

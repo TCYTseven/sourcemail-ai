@@ -31,9 +31,8 @@ const geist = Geist({
   display: "swap",
 });
 
-const title = `${BRAND_NAME} | Automate and clean your inbox`;
-const description =
-  "Your AI executive assistant to reach inbox zero fast. Automate emails, bulk unsubscribe, block cold emails, and analytics. Open-source";
+const title = `${BRAND_NAME} | AI that drafts your email replies`;
+const description = `${BRAND_NAME} drafts your email replies from a master prompt your admin controls. You review and send — the AI never sends on its own.`;
 
 // JSON-LD structured data
 const jsonLd: WithContext<WebApplication> = {
@@ -57,12 +56,10 @@ const jsonLd: WithContext<WebApplication> = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "AI Email Assistant",
-    "Email Automation",
-    "Bulk Unsubscribe",
-    "Cold Email Blocking",
-    "Email Analytics",
-    "Newsletter Management",
+    "AI Email Drafting",
+    "Reply Assistant",
+    "Master Prompt Control",
+    "Gmail Integration",
   ],
   publisher: {
     "@type": "Organization",
@@ -72,10 +69,7 @@ const jsonLd: WithContext<WebApplication> = {
       "@type": "ImageObject",
       url: toAbsoluteUrl(BRAND_ICON_URL),
     },
-    sameAs: [
-      "https://x.com/inboxzero_ai",
-      "https://github.com/elie222/inbox-zero",
-    ],
+    sameAs: ["https://x.com/lassomail"],
   },
 };
 
@@ -93,7 +87,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    creator: "@inboxzero_ai",
+    creator: "@lassomail",
   },
   metadataBase: new URL(env.NEXT_PUBLIC_BASE_URL),
   // issues with robots.txt: https://github.com/vercel/next.js/issues/58615#issuecomment-1852457285
@@ -121,7 +115,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#FFF",
+  themeColor: "#0a0a0f",
 };
 
 export default async function RootLayout({
@@ -130,7 +124,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html lang="en" className="dark h-full" suppressHydrationWarning>
       <body
         className={`h-full ${env.NEXT_PUBLIC_USE_AEONIK_FONT ? aeonikFont.variable : ""} ${geist.variable} font-sans antialiased`}
       >
@@ -147,7 +141,7 @@ export default async function RootLayout({
           </Suspense>
           <GlobalProviders>
             {children}
-            <Toaster closeButton richColors theme="light" visibleToasts={9} />
+            <Toaster closeButton richColors theme="dark" visibleToasts={4} />
           </GlobalProviders>
         </PostHogProvider>
         <Analytics />

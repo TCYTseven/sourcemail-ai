@@ -1,5 +1,5 @@
-import { redirectToEmailAccountPath } from "@/utils/account";
+import { redirect } from "next/navigation";
 
 export default async function OnboardingBriefPage() {
-  await redirectToEmailAccountPath("/onboarding-brief");
+  redirect("/automation");
 }

@@ -8,12 +8,9 @@ export const STEP_KEYS = {
   BULK_UNSUBSCRIBE: "bulkUnsubscribe",
   FEATURES: "features",
   WHO: "who",
-  COMPANY_SIZE: "companySize",
-  HOW_YOU_HEARD: "howYouHeard",
   LABELS: "labels",
   DRAFT: "draft",
   CUSTOM_RULES: "customRules",
-  INVITE_TEAM: "inviteTeam",
   INBOX_PROCESSED: "inboxProcessed",
 } as const;
 
@@ -26,12 +23,9 @@ const onboardingStepOrder: readonly StepKey[] = [
   STEP_KEYS.BULK_UNSUBSCRIBE,
   // STEP_KEYS.FEATURES,
   STEP_KEYS.WHO,
-  STEP_KEYS.COMPANY_SIZE,
-  STEP_KEYS.HOW_YOU_HEARD,
   STEP_KEYS.LABELS,
   STEP_KEYS.DRAFT,
   STEP_KEYS.CUSTOM_RULES,
-  STEP_KEYS.INVITE_TEAM,
   STEP_KEYS.INBOX_PROCESSED,
 ];
 const legacyNumericOnboardingStepOrder: readonly (StepKey | "welcome")[] = [
@@ -39,35 +33,16 @@ const legacyNumericOnboardingStepOrder: readonly (StepKey | "welcome")[] = [
   ...onboardingStepOrder,
 ];
 
-// Sales/marketing survey steps that are irrelevant for self-hosted deployments.
-const salesSurveyStepKeys: readonly StepKey[] = [
-  STEP_KEYS.WHO,
-  STEP_KEYS.COMPANY_SIZE,
-  STEP_KEYS.HOW_YOU_HEARD,
-];
-
 export function getVisibleOnboardingStepKeys({
-  canInviteTeam,
   autoDraftDisabled,
-  isSelfHosted,
 }: {
-  canInviteTeam: boolean;
   autoDraftDisabled: boolean;
-  isSelfHosted?: boolean;
 }) {
   return onboardingStepOrder.filter((stepKey) => {
     if (
       autoDraftDisabled &&
       (stepKey === STEP_KEYS.DRAFT_REPLIES || stepKey === STEP_KEYS.DRAFT)
     ) {
-      return false;
-    }
-
-    if (!canInviteTeam && stepKey === STEP_KEYS.INVITE_TEAM) {
-      return false;
-    }
-
-    if (isSelfHosted && salesSurveyStepKeys.includes(stepKey)) {
       return false;
     }
 
@@ -132,7 +107,7 @@ export function getOnboardingStepIndex(
 }
 
 export function isOptionalOnboardingStep(stepKey: StepKey) {
-  return stepKey === STEP_KEYS.INVITE_TEAM;
+  return stepKey === STEP_KEYS.BULK_UNSUBSCRIBE;
 }
 
 function clampStepIndex(stepIndex: number, totalSteps: number) {
