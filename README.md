@@ -1,5 +1,7 @@
 # LassoMail — AI that drafts your email replies
 
+**Repository:** [github.com/TCYTseven/sourcemail-ai](https://github.com/TCYTseven/sourcemail-ai)
+
 LassoMail is a focused AI email tool: it pre-drafts replies to your Gmail, guided by a **master prompt** your admin controls. You review and send — LassoMail never sends on its own.
 
 > LassoMail is a fork of the open-source [Inbox Zero](https://github.com/elie222/inbox-zero) project (AGPL-3.0). See [LICENSE](LICENSE).
@@ -25,6 +27,8 @@ LassoMail is a focused AI email tool: it pre-drafts replies to your Gmail, guide
 > **Prerequisites**: [Docker](https://docs.docker.com/engine/install/), [Node.js](https://nodejs.org/) v24+, and [pnpm](https://pnpm.io/) v10+
 
 ```bash
+git clone https://github.com/TCYTseven/sourcemail-ai.git
+cd sourcemail-ai
 docker compose -f docker-compose.dev.yml up -d   # Postgres + Redis
 pnpm install
 npm run setup                                     # Interactive env setup
